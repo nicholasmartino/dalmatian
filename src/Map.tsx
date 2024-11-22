@@ -17,9 +17,9 @@ const Map: React.FC = () => {
 	useEffect(() => {
 		const map = new mapboxgl.Map({
 			container: mapContainer.current!,
-			style: 'mapbox://styles/mapbox/streets-v11',
+			style: 'mapbox://styles/mapbox/dark-v11',
 			center: [-123.1216, 49.2827], // Initial center set to Vancouver, BC
-			zoom: 10, // Adjust zoom level as needed
+			zoom: 11, // Adjust zoom level as needed
 		});
 
 		map.on('load', () => {
