@@ -1,9 +1,7 @@
 import mapboxgl, { Marker } from 'mapbox-gl';
 import React, { useEffect, useRef, useState } from 'react';
 
-console.log(import.meta.env);
-const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
-mapboxgl.accessToken = mapboxToken;
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 interface Node {
 	id: string;
