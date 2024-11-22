@@ -1,10 +1,9 @@
-import mapboxgl, { Marker } from 'mapbox-gl';
+import mapboxgl from 'mapbox-gl';
 import React, { useEffect, useRef, useState } from 'react';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 interface Node {
-	id: string;
 	coordinates: [number, number];
 }
 
@@ -21,54 +20,14 @@ const Map: React.FC = () => {
 			zoom: 11, // Adjust zoom level as needed
 		});
 
-		map.on('load', () => {
-			loadNodes(); // Load nodes from JSON
-		});
+		map.on('load', () => {});
 
 		return () => map.remove(); // Cleanup on unmount
 	}, []);
 
-	const loadNodes = async () => {
-		const response = await fetch('path/to/nodes.json');
-		const data = await response.json();
-		setNodes(data.nodes); // Assuming the JSON structure has a 'nodes' array
-		renderNodes(data.nodes);
-	};
-
-	const renderNodes = (nodes: Node[]) => {
-		nodes.forEach((node) => {
-			const marker = new Marker({ draggable: true })
-				.setLngLat(node.coordinates)
-				.addTo(mapboxgl.Map);
-
-			marker.on('dragend', (e) => onNodeDragEnd(e, node.id));
-		});
-	};
-
-	const onNodeDragEnd = (event: mapboxgl.MarkerDragEvent, nodeId: string) => {
-		const lngLat = event.target.getLngLat();
-		setNodes((prevNodes) =>
-			prevNodes.map((node) =>
-				node.id === nodeId
-					? { ...node, coordinates: [lngLat.lng, lngLat.lat] }
-					: node
-			)
-		);
-	};
-
 	const addNode = (coordinates: [number, number]) => {
-		const newNode: Node = { id: generateId(), coordinates };
+		const newNode: Node = { coordinates };
 		setNodes((prevNodes) => [...prevNodes, newNode]);
-		renderNodes([newNode]); // Render the new node
-	};
-
-	const generateId = (): string => {
-		return Math.random().toString(36).substr(2, 9); // Simple ID generator
-	};
-
-	const removeNode = (nodeId: string) => {
-		setNodes((prevNodes) => prevNodes.filter((node) => node.id !== nodeId));
-		// Optionally, re-render nodes if needed
 	};
 
 	const handleMapClick = (event: mapboxgl.MapMouseEvent) => {
@@ -84,10 +43,10 @@ const Map: React.FC = () => {
 	};
 
 	return (
-		<div>
+		<div className="w-full">
 			<div
+				style={{ width: '100vw', height: '90vh' }}
 				ref={mapContainer}
-				style={{ width: '100vw', height: '80vh' }}
 				onClick={handleMapClick}
 			/>
 			<button onClick={handleAddNode}>Add Nodes</button>
