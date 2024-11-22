@@ -13,6 +13,7 @@ interface Node {
 const Map: React.FC = () => {
 	const mapContainer = useRef<HTMLDivElement | null>(null);
 	const [nodes, setNodes] = useState<Node[]>([]);
+	const [isAddingNodes, setIsAddingNodes] = useState<boolean>(false);
 
 	useEffect(() => {
 		const map = new mapboxgl.Map({
@@ -72,13 +73,26 @@ const Map: React.FC = () => {
 		// Optionally, re-render nodes if needed
 	};
 
+	const handleMapClick = (event: mapboxgl.MapMouseEvent) => {
+		const coordinates: [number, number] = [
+			event.lngLat.lng,
+			event.lngLat.lat,
+		] as [number, number];
+		addNode(coordinates); // Add node at clicked location
+	};
+
+	const handleAddNode = () => {
+		setIsAddingNodes(!isAddingNodes);
+	};
+
 	return (
 		<div>
 			<div
 				ref={mapContainer}
 				style={{ width: '100vw', height: '80vh' }}
+				onClick={handleMapClick}
 			/>
-			{/* Add buttons or UI elements for adding/removing nodes */}
+			<button onClick={handleAddNode}>Add Nodes</button>
 		</div>
 	);
 };
