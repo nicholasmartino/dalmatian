@@ -18,8 +18,8 @@ const Map: React.FC = () => {
 		const map = new mapboxgl.Map({
 			container: mapContainer.current!,
 			style: 'mapbox://styles/mapbox/streets-v11',
-			center: [0, 0], // Initial center
-			zoom: 2,
+			center: [-123.1216, 49.2827], // Initial center set to Vancouver, BC
+			zoom: 10, // Adjust zoom level as needed
 		});
 
 		map.on('load', () => {
