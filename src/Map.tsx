@@ -1,8 +1,11 @@
 // src/components/Map.tsx
+import dotenv from "dotenv";
 import mapboxgl, { Marker } from "mapbox-gl";
 import React, { useEffect, useRef, useState } from "react";
 
-mapboxgl.accessToken = "YOUR_MAPBOX_ACCESS_TOKEN";
+dotenv.config();
+
+mapboxgl.accessToken = process.env.MAPBOX_TOKEN ?? "";
 
 interface Node {
   id: string;
