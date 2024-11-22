@@ -76,7 +76,7 @@ const Map: React.FC = () => {
 		<div>
 			<div
 				ref={mapContainer}
-				style={{ width: '100vw', height: '500px' }}
+				style={{ width: '100vw', height: '80vh' }}
 			/>
 			{/* Add buttons or UI elements for adding/removing nodes */}
 		</div>
