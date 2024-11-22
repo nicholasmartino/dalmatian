@@ -1,12 +1,12 @@
-import "./App.css";
-import Map from "./Map";
+import './App.css';
+import Map from './Map';
 
 function App() {
-  return (
-    <>
-      <Map />
-    </>
-  );
+	return (
+		<>
+			<Map />
+		</>
+	);
 }
 
 export default App;
