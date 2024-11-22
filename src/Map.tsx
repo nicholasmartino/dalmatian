@@ -1,11 +1,9 @@
-// src/components/Map.tsx
-import dotenv from "dotenv";
 import mapboxgl, { Marker } from "mapbox-gl";
 import React, { useEffect, useRef, useState } from "react";
 
-dotenv.config();
-
-mapboxgl.accessToken = process.env.MAPBOX_TOKEN ?? "";
+console.log(import.meta.env);
+const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
+mapboxgl.accessToken = mapboxToken;
 
 interface Node {
   id: string;
@@ -76,7 +74,7 @@ const Map: React.FC = () => {
 
   return (
     <div>
-      <div ref={mapContainer} style={{ width: "100%", height: "500px" }} />
+      <div ref={mapContainer} style={{ width: "100vw", height: "500px" }} />
       {/* Add buttons or UI elements for adding/removing nodes */}
     </div>
   );
