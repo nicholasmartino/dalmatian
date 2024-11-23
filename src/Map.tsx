@@ -1,64 +1,62 @@
-import mapboxgl, { Marker } from 'mapbox-gl';
-import React, { useEffect, useRef, useState } from 'react';
-
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+import 'mapbox-gl/dist/mapbox-gl.css';
+import React, { useState } from 'react';
+import InteractiveMap, { MapMouseEvent, Marker } from 'react-map-gl';
 
 interface Node {
-	coordinates: [number, number];
+	longitude: number;
+	latitude: number;
 }
 
 export const Map: React.FC = () => {
-	const mapContainer = useRef<HTMLDivElement | null>(null);
 	const [nodes, setNodes] = useState<Node[]>([]);
 	const [isAddingNodes, setIsAddingNodes] = useState<boolean>(false);
-	const mapRef = useRef<mapboxgl.Map | null>(null);
 
-	useEffect(() => {
-		const map = new mapboxgl.Map({
-			container: mapContainer.current!,
-			style: 'mapbox://styles/mapbox/dark-v11',
-			center: [-123.1216, 49.2827],
-			zoom: 11,
-		});
-		mapRef.current = map;
-
-		map.on('load', () => {
-			nodes.forEach((node) => {
-				new Marker().setLngLat(node.coordinates).addTo(map);
-			});
-		});
-
-		map.on('click', (event) => {
-			const coordinates: [number, number] = [
-				event.lngLat.lng,
-				event.lngLat.lat,
-			] as [number, number];
-			addNode(coordinates);
-		});
-
-		return () => map.remove();
-	}, [nodes]);
-
-	const addNode = (coordinates: [number, number]) => {
-		const newNode: Node = { coordinates };
-		setNodes((prevNodes) => {
-			const updatedNodes = [...prevNodes, newNode];
-			new Marker().setLngLat(coordinates).addTo(mapRef.current!);
-			return updatedNodes;
-		});
+	const addNode = (event: MapMouseEvent) => {
+		if (!isAddingNodes) return;
+		const newNode: Node = {
+			longitude: event.lngLat.lng,
+			latitude: event.lngLat.lat,
+		};
+		setNodes((prevNodes: Node[]) => [...prevNodes, newNode]);
 	};
 
 	const handleAddNode = () => {
 		setIsAddingNodes(!isAddingNodes);
 	};
 
+	console.log('nodes', nodes);
+
 	return (
-		<div className="w-full">
-			<div
+		<>
+			<InteractiveMap
+				mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN}
+				initialViewState={{
+					longitude: -123.1216,
+					latitude: 49.2827,
+					zoom: 11,
+				}}
 				style={{ width: '100vw', height: '90vh' }}
-				ref={mapContainer}
-			/>
-			<button onClick={handleAddNode}>Add Nodes</button>
-		</div>
+				mapStyle="mapbox://styles/mapbox/dark-v11"
+				onClick={addNode}
+			>
+				{nodes.map((node: Node) => (
+					<Marker
+						key={JSON.stringify(node)}
+						longitude={node.longitude}
+						latitude={node.latitude}
+						anchor="bottom"
+					/>
+				))}
+			</InteractiveMap>
+
+			<button
+				className={`absolute top-0 z-10 left-0 ml-2 mt-2 ${
+					isAddingNodes ? `text-cyan-700` : `text-gray-200`
+				}`}
+				onClick={handleAddNode}
+			>
+				Add Nodes
+			</button>
+		</>
 	);
 };
