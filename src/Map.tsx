@@ -1,8 +1,22 @@
 import 'mapbox-gl/dist/mapbox-gl.css';
 import React, { useState } from 'react';
-import InteractiveMap, { MapMouseEvent, Marker } from 'react-map-gl';
+import InteractiveMap, {
+	MapMouseEvent,
+	Marker,
+	MarkerDragEvent,
+} from 'react-map-gl';
+
+const newGuid = () => {
+	return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) =>
+		(
+			+c ^
+			(crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (+c / 4)))
+		).toString(16)
+	);
+};
 
 interface Node {
+	id: string;
 	longitude: number;
 	latitude: number;
 }
@@ -14,6 +28,7 @@ export const Map: React.FC = () => {
 	const addNode = (event: MapMouseEvent) => {
 		if (!isAddingNodes) return;
 		const newNode: Node = {
+			id: newGuid(),
 			longitude: event.lngLat.lng,
 			latitude: event.lngLat.lat,
 		};
@@ -24,7 +39,19 @@ export const Map: React.FC = () => {
 		setIsAddingNodes(!isAddingNodes);
 	};
 
-	console.log('nodes', nodes);
+	const updateNodeOnDrag = (markerId: string, event: MarkerDragEvent) => {
+		setNodes((prevNodes) =>
+			prevNodes.map((node) =>
+				node.id === markerId
+					? {
+							...node,
+							longitude: event.lngLat.lng,
+							latitude: event.lngLat.lat,
+					  }
+					: node
+			)
+		);
+	};
 
 	return (
 		<>
@@ -41,10 +68,12 @@ export const Map: React.FC = () => {
 			>
 				{nodes.map((node: Node) => (
 					<Marker
-						key={JSON.stringify(node)}
+						key={node.id}
 						longitude={node.longitude}
 						latitude={node.latitude}
 						anchor="bottom"
+						draggable={true}
+						onDragEnd={(event) => updateNodeOnDrag(node.id, event)}
 					/>
 				))}
 			</InteractiveMap>
