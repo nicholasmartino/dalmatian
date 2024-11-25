@@ -39,10 +39,10 @@ export const Map: React.FC = () => {
 		setIsAddingNodes(!isAddingNodes);
 	};
 
-	const updateNodeOnDrag = (markerId: string, event: MarkerDragEvent) => {
+	const updateNodeOnDrag = (nodeId: string, event: MarkerDragEvent) => {
 		setNodes((prevNodes) =>
 			prevNodes.map((node) =>
-				node.id === markerId
+				node.id === nodeId
 					? {
 							...node,
 							longitude: event.lngLat.lng,
