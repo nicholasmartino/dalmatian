@@ -7,6 +7,7 @@ import InteractiveMap, {
 } from 'react-map-gl';
 import { Node } from '../types/Node';
 import { exportNodesToJson, importNodesFromJson } from '../utils/NodesIO';
+import { spatialDispersionIndex } from '../utils/SpatialStats';
 
 const newGuid = () => {
 	return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) =>
@@ -27,6 +28,7 @@ export const Map: React.FC = () => {
 			id: newGuid(),
 			longitude: event.lngLat.lng,
 			latitude: event.lngLat.lat,
+			density: 1,
 		};
 		setNodes((prevNodes: Node[]) => [...prevNodes, newNode]);
 	};
@@ -106,6 +108,13 @@ export const Map: React.FC = () => {
 					className="hidden"
 				/>
 				<button onClick={handleNodesExport}>Export Nodes</button>
+			</div>
+
+			<div
+				className="absolute top-2 right-2 z-10"
+				key={JSON.stringify(nodes)}
+			>
+				{spatialDispersionIndex(nodes).toString()}
 			</div>
 		</>
 	);
