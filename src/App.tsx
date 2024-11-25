@@ -1,5 +1,5 @@
 import './App.css';
-import { Map } from './Map';
+import { Map } from './components/Map';
 
 export const App = () => {
 	return <Map />;

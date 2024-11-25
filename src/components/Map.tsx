@@ -5,6 +5,8 @@ import InteractiveMap, {
 	Marker,
 	MarkerDragEvent,
 } from 'react-map-gl';
+import { Node } from '../types/Node';
+import { exportNodesToJson, importNodesFromJson } from '../utils/NodesIO';
 
 const newGuid = () => {
 	return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) =>
@@ -14,12 +16,6 @@ const newGuid = () => {
 		).toString(16)
 	);
 };
-
-interface Node {
-	id: string;
-	longitude: number;
-	latitude: number;
-}
 
 export const Map: React.FC = () => {
 	const [nodes, setNodes] = useState<Node[]>([]);
@@ -35,10 +31,6 @@ export const Map: React.FC = () => {
 		setNodes((prevNodes: Node[]) => [...prevNodes, newNode]);
 	};
 
-	const handleAddNode = () => {
-		setIsAddingNodes(!isAddingNodes);
-	};
-
 	const updateNodeOnDrag = (nodeId: string, event: MarkerDragEvent) => {
 		setNodes((prevNodes) =>
 			prevNodes.map((node) =>
@@ -51,6 +43,18 @@ export const Map: React.FC = () => {
 					: node
 			)
 		);
+	};
+
+	const handleAddNode = () => {
+		setIsAddingNodes(!isAddingNodes);
+	};
+
+	const handleNodesImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+		importNodesFromJson(event, setNodes);
+	};
+
+	const handleNodesExport = () => {
+		exportNodesToJson(nodes);
 	};
 
 	return (
@@ -78,14 +82,31 @@ export const Map: React.FC = () => {
 				))}
 			</InteractiveMap>
 
-			<button
-				className={`absolute top-0 z-10 left-0 ml-2 mt-2 ${
-					isAddingNodes ? `text-cyan-700` : `text-gray-200`
-				}`}
-				onClick={handleAddNode}
-			>
-				Add Nodes
-			</button>
+			<div className="absolute top-2 left-2 z-10 flex-col flex text-left">
+				<button
+					className={` ${
+						isAddingNodes ? `text-cyan-700` : `text-gray-200`
+					}`}
+					onClick={handleAddNode}
+				>
+					Add Nodes
+				</button>
+				<button
+					onClick={() =>
+						document.getElementById('fileInput')?.click()
+					}
+				>
+					Import Nodes
+				</button>
+				<input
+					id="fileInput"
+					type="file"
+					accept=".json"
+					onChange={handleNodesImport}
+					className="hidden"
+				/>
+				<button onClick={handleNodesExport}>Export Nodes</button>
+			</div>
 		</>
 	);
 };
