@@ -7,7 +7,7 @@ import InteractiveMap, {
 } from 'react-map-gl';
 import { Node } from '../types/Node';
 import { exportNodesToJson, importNodesFromJson } from '../utils/NodesIO';
-import { spatialDispersionIndex } from '../utils/SpatialStats';
+import { spatialDispersionIndex as calculateSpatialDispersionIndex } from '../utils/SpatialStats';
 
 const newGuid = () => {
 	return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) =>
@@ -84,22 +84,22 @@ export const Map: React.FC = () => {
 				))}
 			</InteractiveMap>
 
-			<div className="absolute top-2 left-2 z-10 flex-col flex text-left">
-				<button
+			<Box className="top-2 left-2">
+				<Button
 					className={` ${
-						isAddingNodes ? `text-cyan-700` : `text-gray-200`
+						isAddingNodes ? `text-cyan-800` : `text-gray-200`
 					}`}
 					onClick={handleAddNode}
 				>
 					Add Nodes
-				</button>
-				<button
+				</Button>
+				<Button
 					onClick={() =>
 						document.getElementById('fileInput')?.click()
 					}
 				>
 					Import Nodes
-				</button>
+				</Button>
 				<input
 					id="fileInput"
 					type="file"
@@ -107,15 +107,50 @@ export const Map: React.FC = () => {
 					onChange={handleNodesImport}
 					className="hidden"
 				/>
-				<button onClick={handleNodesExport}>Export Nodes</button>
-			</div>
+				<Button onClick={handleNodesExport}>Export Nodes</Button>
+			</Box>
 
-			<div
-				className="absolute top-2 right-2 z-10"
+			<Box
+				className="top-2 right-2 text-right"
 				key={JSON.stringify(nodes)}
 			>
-				{spatialDispersionIndex(nodes).toString()}
-			</div>
+				Spatial Dispersion Index{' '}
+				<b>{calculateSpatialDispersionIndex(nodes).toLocaleString()}</b>
+			</Box>
 		</>
+	);
+};
+
+type BoxProps = {
+	children: React.ReactNode;
+	className?: string;
+};
+
+const Box = (props: BoxProps) => {
+	const { children, className } = props;
+	return (
+		<div
+			className={`absolute z-10 flex-col flex text-left border-cyan-800 border-2 rounded-lg p-4 ${className}`}
+		>
+			{children}
+		</div>
+	);
+};
+
+type ButtonProps = {
+	onClick: () => void;
+	children: React.ReactNode;
+	className?: string;
+};
+
+const Button = (props: ButtonProps) => {
+	const { onClick, children, className } = props;
+	return (
+		<button
+			onClick={onClick}
+			className={`text-left w-full hover:text-cyan-600 ${className}`}
+		>
+			{children}
+		</button>
 	);
 };
