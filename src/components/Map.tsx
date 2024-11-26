@@ -21,6 +21,7 @@ const newGuid = () => {
 export const Map: React.FC = () => {
 	const [nodes, setNodes] = useState<Node[]>([]);
 	const [isAddingNodes, setIsAddingNodes] = useState<boolean>(false);
+	const [isRemovingNodes, setIsRemovingNodes] = useState<boolean>(false);
 
 	const addNode = (event: MapMouseEvent) => {
 		if (!isAddingNodes) return;
@@ -47,8 +48,19 @@ export const Map: React.FC = () => {
 		);
 	};
 
+	const deleteNode = (nodeId: string) => {
+		if (!isRemovingNodes) return;
+		setNodes((prevNodes) => prevNodes.filter((node) => node.id !== nodeId));
+	};
+
 	const handleAddNode = () => {
 		setIsAddingNodes(!isAddingNodes);
+		setIsRemovingNodes(false);
+	};
+
+	const handleRemoveNode = () => {
+		setIsRemovingNodes(!isRemovingNodes);
+		setIsAddingNodes(false);
 	};
 
 	const handleNodesImport = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,6 +83,7 @@ export const Map: React.FC = () => {
 				style={{ width: '100vw', height: '90vh' }}
 				mapStyle="mapbox://styles/mapbox/dark-v11"
 				onClick={addNode}
+				onContextMenu={(e) => e.preventDefault()}
 			>
 				{nodes.map((node: Node) => (
 					<Marker
@@ -79,7 +92,9 @@ export const Map: React.FC = () => {
 						latitude={node.latitude}
 						anchor="bottom"
 						draggable={true}
+						onDragStart={() => setIsRemovingNodes(false)}
 						onDragEnd={(event) => updateNodeOnDrag(node.id, event)}
+						onClick={() => deleteNode(node.id)}
 					/>
 				))}
 			</InteractiveMap>
@@ -92,6 +107,14 @@ export const Map: React.FC = () => {
 					onClick={handleAddNode}
 				>
 					Add Nodes
+				</Button>
+				<Button
+					className={` ${
+						isRemovingNodes ? `text-cyan-800` : `text-gray-200`
+					}`}
+					onClick={handleRemoveNode}
+				>
+					Remove Nodes
 				</Button>
 				<Button
 					onClick={() =>
