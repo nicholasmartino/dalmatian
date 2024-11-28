@@ -90,7 +90,7 @@ export const Map: React.FC = () => {
 						key={node.id}
 						longitude={node.longitude}
 						latitude={node.latitude}
-						anchor="bottom"
+						anchor="center"
 						draggable={true}
 						onDragStart={() => setIsRemovingNodes(false)}
 						onDragEnd={(event) => updateNodeOnDrag(node.id, event)}
