@@ -7,7 +7,10 @@ import InteractiveMap, {
 } from 'react-map-gl';
 import { Node } from '../types/Node';
 import { exportNodesToJson, importNodesFromJson } from '../utils/NodesIO';
-import { spatialDispersionIndex as calculateSpatialDispersionIndex } from '../utils/SpatialStats';
+import {
+	calculateSpatialDispersionIndex,
+	calculateTotalDensity,
+} from '../utils/SpatialStats';
 
 const newGuid = () => {
 	return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) =>
@@ -137,10 +140,31 @@ export const Map: React.FC = () => {
 				className="top-2 right-2 text-right"
 				key={JSON.stringify(nodes)}
 			>
-				Spatial Dispersion Index{' '}
-				<b>{calculateSpatialDispersionIndex(nodes).toLocaleString()}</b>
+				<Metric
+					label={'Spatial Dispersion Index'}
+					value={calculateSpatialDispersionIndex(nodes)}
+				/>
+				<Metric
+					label={'Total Density'}
+					value={calculateTotalDensity(nodes)}
+				/>
 			</Box>
 		</>
+	);
+};
+
+type MetricProps = {
+	label: string;
+	value: number;
+};
+
+const Metric = (props: MetricProps) => {
+	const { label, value } = props;
+	return (
+		<div className="flex justify-between w-full">
+			<div className="mr-2 text-right w-full">{label}</div>
+			<b>{value}</b>
+		</div>
 	);
 };
 

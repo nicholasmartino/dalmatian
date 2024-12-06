@@ -25,7 +25,7 @@ const weightedMeanCenter = (nodes: Node[]) => {
 };
 
 // Spatial Dispersion Index
-export const spatialDispersionIndex = (nodes: Node[]): number => {
+export const calculateSpatialDispersionIndex = (nodes: Node[]): number => {
 	if (nodes.length === 0) return 0;
 
 	const totalDensity = nodes.reduce(
@@ -42,4 +42,9 @@ export const spatialDispersionIndex = (nodes: Node[]): number => {
 	}, 0);
 
 	return Math.sqrt(variance / totalDensity);
+};
+
+export const calculateTotalDensity = (nodes: Node[]): number => {
+	if (nodes.length === 0) return 0;
+	return nodes.map((n) => n.density).reduce((n) => n);
 };
