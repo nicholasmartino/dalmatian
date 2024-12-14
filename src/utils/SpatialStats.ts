@@ -41,7 +41,7 @@ export const calculateSpatialDispersionIndex = (nodes: Node[]): number => {
 		return sum + (node.density ?? 1) * distance ** 2;
 	}, 0);
 
-	return Math.sqrt(variance / totalDensity);
+	return Math.round(Math.sqrt(variance / totalDensity) * 100) / 100;
 };
 
 export const calculateTotalDensity = (nodes: Node[]): number => {
