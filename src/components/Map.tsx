@@ -1,9 +1,12 @@
+import { circle as turfCircle, union as turfUnion } from '@turf/turf';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import React, { useState } from 'react';
 import InteractiveMap, {
+	Layer,
 	MapMouseEvent,
 	Marker,
 	MarkerDragEvent,
+	Source,
 } from 'react-map-gl';
 import { Node } from '../types/Node';
 import { exportNodesToJson, importNodesFromJson } from '../utils/NodesIO';
@@ -32,6 +35,7 @@ export const Map: React.FC = () => {
 			id: newGuid(),
 			longitude: event.lngLat.lng,
 			latitude: event.lngLat.lat,
+			radius: 1600,
 			density: 1,
 		};
 		setNodes((prevNodes: Node[]) => [...prevNodes, newNode]);
@@ -74,6 +78,34 @@ export const Map: React.FC = () => {
 		exportNodesToJson(nodes);
 	};
 
+	// Generate GeoJSON circles for all nodes
+	const generateCircleGeoJSON = () => {
+		if (nodes.length === 0) {
+			return {
+				type: 'FeatureCollection',
+				features: [],
+			};
+		}
+
+		const mergedFeatures = nodes.map((node) =>
+			turfCircle([node.longitude, node.latitude], node.radius / 1000, {
+				steps: 64,
+			})
+		);
+
+		const featureCollection = {
+			type: 'FeatureCollection' as const,
+			features: mergedFeatures,
+		};
+
+		const mergedGeometry = turfUnion(featureCollection);
+
+		return {
+			type: 'FeatureCollection',
+			features: [mergedGeometry],
+		};
+	};
+
 	return (
 		<>
 			<InteractiveMap
@@ -83,11 +115,12 @@ export const Map: React.FC = () => {
 					latitude: 49.2827,
 					zoom: 11,
 				}}
-				style={{ width: '100vw', height: '90vh' }}
+				style={{ width: '100vw', height: '100vh' }}
 				mapStyle="mapbox://styles/mapbox/dark-v11"
 				onClick={addNode}
 				onContextMenu={(e) => e.preventDefault()}
 			>
+				{/* Render Markers */}
 				{nodes.map((node: Node) => (
 					<Marker
 						key={node.id}
@@ -100,8 +133,33 @@ export const Map: React.FC = () => {
 						onClick={() => deleteNode(node.id)}
 					/>
 				))}
+
+				{/* Render Circles */}
+				<Source
+					id="node-circles"
+					type="geojson"
+					data={generateCircleGeoJSON()}
+				>
+					<Layer
+						id="circle-layer"
+						type="fill"
+						paint={{
+							'fill-color': '#007cbf',
+							'fill-opacity': 0.3,
+						}}
+					/>
+					<Layer
+						id="circle-outline-layer"
+						type="line"
+						paint={{
+							'line-color': '#007cbf',
+							'line-width': 2,
+						}}
+					/>
+				</Source>
 			</InteractiveMap>
 
+			{/* Control UI */}
 			<Box className="top-2 left-2">
 				<Button
 					className={` ${
@@ -136,6 +194,7 @@ export const Map: React.FC = () => {
 				<Button onClick={handleNodesExport}>Export Nodes</Button>
 			</Box>
 
+			{/* Metrics UI */}
 			<Box
 				className="top-2 right-2 text-right"
 				key={JSON.stringify(nodes)}
