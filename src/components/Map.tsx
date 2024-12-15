@@ -101,6 +101,76 @@ const Metric = (props: MetricProps) => {
 	);
 };
 
+const NodeBuffers: React.FC<{ nodes: Node[] }> = ({ nodes }) => {
+	// Generate GeoJSON circles for all nodes
+	const generateCircleGeoJSON = () => {
+		if (nodes.length === 0) {
+			return {
+				type: 'FeatureCollection',
+				features: [],
+			};
+		}
+
+		const featureCollection = {
+			type: 'FeatureCollection' as const,
+			features: nodes.map((node) =>
+				turfCircle(
+					[node.longitude, node.latitude],
+					node.radius / 1000,
+					{
+						steps: 64,
+					}
+				)
+			),
+		};
+		if (featureCollection.features.length <= 1) return featureCollection;
+
+		return {
+			type: 'FeatureCollection',
+			features: [turfUnion(featureCollection)],
+		};
+	};
+
+	return (
+		<Source id="node-circles" type="geojson" data={generateCircleGeoJSON()}>
+			<Layer
+				id="circle-layer"
+				type="fill"
+				paint={{
+					'fill-color': '#007cbf',
+					'fill-opacity': 0.3,
+				}}
+			/>
+			<Layer
+				id="circle-outline-layer"
+				type="line"
+				paint={{
+					'line-color': '#007cbf',
+					'line-width': 2,
+				}}
+			/>
+		</Source>
+	);
+};
+
+/* Render GeoJSON Polygon Layer from file */
+const Parcels: React.FC<{ data: any }> = ({ data }) => {
+	return (
+		data && (
+			<Source id="geojson-source" type="geojson" data={data}>
+				<Layer
+					id="geojson-layer"
+					type="fill"
+					paint={{
+						'fill-color': '#ff0000',
+						'fill-opacity': 0.2,
+					}}
+				/>
+			</Source>
+		)
+	);
+};
+
 export const Map: React.FC = () => {
 	const [nodes, setNodes] = useState<Node[]>([]);
 	const [isAddingNodes, setIsAddingNodes] = useState<boolean>(false);
@@ -182,35 +252,6 @@ export const Map: React.FC = () => {
 		);
 	};
 
-	// Generate GeoJSON circles for all nodes
-	const generateCircleGeoJSON = () => {
-		if (nodes.length === 0) {
-			return {
-				type: 'FeatureCollection',
-				features: [],
-			};
-		}
-
-		const featureCollection = {
-			type: 'FeatureCollection' as const,
-			features: nodes.map((node) =>
-				turfCircle(
-					[node.longitude, node.latitude],
-					node.radius / 1000,
-					{
-						steps: 64,
-					}
-				)
-			),
-		};
-		if (featureCollection.features.length <= 1) return featureCollection;
-
-		return {
-			type: 'FeatureCollection',
-			features: [turfUnion(featureCollection)],
-		};
-	};
-
 	return (
 		<>
 			<InteractiveMap
@@ -239,47 +280,8 @@ export const Map: React.FC = () => {
 					/>
 				))}
 
-				{/* Render Circles */}
-				<Source
-					id="node-circles"
-					type="geojson"
-					data={generateCircleGeoJSON()}
-				>
-					<Layer
-						id="circle-layer"
-						type="fill"
-						paint={{
-							'fill-color': '#007cbf',
-							'fill-opacity': 0.3,
-						}}
-					/>
-					<Layer
-						id="circle-outline-layer"
-						type="line"
-						paint={{
-							'line-color': '#007cbf',
-							'line-width': 2,
-						}}
-					/>
-				</Source>
-
-				{/* Render GeoJSON Polygon Layer from file */}
-				{geoJsonData && (
-					<Source
-						id="geojson-source"
-						type="geojson"
-						data={geoJsonData}
-					>
-						<Layer
-							id="geojson-layer"
-							type="fill"
-							paint={{
-								'fill-color': '#ff0000',
-								'fill-opacity': 0.2,
-							}}
-						/>
-					</Source>
-				)}
+				<NodeBuffers nodes={nodes} />
+				<Parcels data={geoJsonData} />
 			</InteractiveMap>
 
 			{/* Control UI */}
