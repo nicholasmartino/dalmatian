@@ -3,4 +3,5 @@ export interface Node {
 	longitude: number;
 	latitude: number;
 	density: number;
+	radius: number;
 }

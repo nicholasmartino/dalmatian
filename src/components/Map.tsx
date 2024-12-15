@@ -111,6 +111,7 @@ export const Map: React.FC = () => {
 			longitude: event.lngLat.lng,
 			latitude: event.lngLat.lat,
 			density: 1,
+			radius: radius,
 		};
 		setNodes((prevNodes: Node[]) => [...prevNodes, newNode]);
 	};
@@ -131,7 +132,7 @@ export const Map: React.FC = () => {
 
 	const deleteNode = (nodeId: string) => {
 		if (!isRemovingNodes) return;
-		setNodes((prevNodes) => prevNodes.filter((node) => node.id !== nodeId));
+		setNodes((nodes: Node[]) => nodes.filter((n: Node) => n.id !== nodeId));
 	};
 
 	const handleAddNode = () => {
@@ -152,6 +153,15 @@ export const Map: React.FC = () => {
 		exportNodesToJson(nodes);
 	};
 
+	const setNodeRadii = () => {
+		setNodes((nodes: Node[]) =>
+			nodes.map((n: Node) => ({
+				...n,
+				radius: radius,
+			}))
+		);
+	};
+
 	// Generate GeoJSON circles for all nodes
 	const generateCircleGeoJSON = () => {
 		if (nodes.length === 0) {
@@ -162,7 +172,7 @@ export const Map: React.FC = () => {
 		}
 
 		const mergedFeatures = nodes.map((node) =>
-			turfCircle([node.longitude, node.latitude], radius / 1000, {
+			turfCircle([node.longitude, node.latitude], node.radius / 1000, {
 				steps: 64,
 			})
 		);
@@ -235,7 +245,7 @@ export const Map: React.FC = () => {
 
 			{/* Control UI */}
 			<Box className="top-2 left-2">
-				<Input<number> value={radius} setValue={setRadius} unit="m" />
+				<Input value={radius} setValue={setNodeRadii} unit="m" />
 				<Button
 					className={` ${
 						isAddingNodes ? `text-cyan-800` : `text-gray-200`
