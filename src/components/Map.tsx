@@ -175,22 +175,23 @@ export const Map: React.FC = () => {
 			};
 		}
 
-		const mergedFeatures = nodes.map((node) =>
-			turfCircle([node.longitude, node.latitude], node.radius / 1000, {
-				steps: 64,
-			})
-		);
-
 		const featureCollection = {
 			type: 'FeatureCollection' as const,
-			features: mergedFeatures,
+			features: nodes.map((node) =>
+				turfCircle(
+					[node.longitude, node.latitude],
+					node.radius / 1000,
+					{
+						steps: 64,
+					}
+				)
+			),
 		};
-
-		const mergedGeometry = turfUnion(featureCollection);
+		if (featureCollection.features.length <= 1) return featureCollection;
 
 		return {
 			type: 'FeatureCollection',
-			features: [mergedGeometry],
+			features: [turfUnion(featureCollection)],
 		};
 	};
 
