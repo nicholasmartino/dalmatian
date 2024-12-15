@@ -1,6 +1,6 @@
 import { circle as turfCircle, union as turfUnion } from '@turf/turf';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import InteractiveMap, {
 	Layer,
 	MapMouseEvent,
@@ -106,6 +106,23 @@ export const Map: React.FC = () => {
 	const [isAddingNodes, setIsAddingNodes] = useState<boolean>(false);
 	const [isRemovingNodes, setIsRemovingNodes] = useState<boolean>(false);
 	const [radius, setRadius] = useState<number>(1600);
+	const [geoJsonData, setGeoJsonData] = useState<any>(null);
+
+	useEffect(() => {
+		// Fetch GeoJSON from the public/data folder
+		fetch('./data/Parcel.geojson')
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error('Network response was not ok');
+				}
+				return response.json();
+			})
+			.then((data) => {
+				console.log(data);
+				setGeoJsonData(data);
+			})
+			.catch((error) => console.error('Error loading GeoJSON:', error));
+	}, []);
 
 	const addNode = (event: MapMouseEvent) => {
 		if (!isAddingNodes) return;
@@ -246,6 +263,32 @@ export const Map: React.FC = () => {
 						}}
 					/>
 				</Source>
+
+				{/* Render GeoJSON Polygon Layer from file */}
+				{geoJsonData && (
+					<Source
+						id="geojson-source"
+						type="geojson"
+						data={geoJsonData}
+					>
+						<Layer
+							id="geojson-layer"
+							type="fill"
+							paint={{
+								'fill-color': '#ff0000',
+								'fill-opacity': 0.5,
+							}}
+						/>
+						<Layer
+							id="geojson-outline-layer"
+							type="line"
+							paint={{
+								'line-color': '#ff0000',
+								'line-width': 2,
+							}}
+						/>
+					</Source>
+				)}
 			</InteractiveMap>
 
 			{/* Control UI */}
