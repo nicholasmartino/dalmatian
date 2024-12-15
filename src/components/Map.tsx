@@ -1,4 +1,16 @@
-import { circle as turfCircle, union as turfUnion } from '@turf/turf';
+import {
+	booleanPointInPolygon,
+	centroid,
+	circle as turfCircle,
+	union as turfUnion,
+} from '@turf/turf';
+import {
+	Feature,
+	FeatureCollection,
+	GeoJsonProperties,
+	MultiPolygon,
+	Polygon,
+} from 'geojson';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import React, { useEffect, useState } from 'react';
 import InteractiveMap, {
@@ -101,74 +113,55 @@ const Metric = (props: MetricProps) => {
 	);
 };
 
-const NodeBuffers: React.FC<{ nodes: Node[] }> = ({ nodes }) => {
-	// Generate GeoJSON circles for all nodes
-	const generateCircleGeoJSON = () => {
-		if (nodes.length === 0) {
-			return {
-				type: 'FeatureCollection',
-				features: [],
-			};
-		}
-
-		const featureCollection = {
-			type: 'FeatureCollection' as const,
-			features: nodes.map((node) =>
-				turfCircle(
-					[node.longitude, node.latitude],
-					node.radius / 1000,
-					{
-						steps: 64,
-					}
-				)
-			),
-		};
-		if (featureCollection.features.length <= 1) return featureCollection;
-
-		return {
-			type: 'FeatureCollection',
-			features: [turfUnion(featureCollection)],
-		};
-	};
-
-	return (
-		<Source id="node-circles" type="geojson" data={generateCircleGeoJSON()}>
-			<Layer
-				id="circle-layer"
-				type="fill"
-				paint={{
-					'fill-color': '#007cbf',
-					'fill-opacity': 0.3,
-				}}
-			/>
-			<Layer
-				id="circle-outline-layer"
-				type="line"
-				paint={{
-					'line-color': '#007cbf',
-					'line-width': 2,
-				}}
-			/>
-		</Source>
-	);
+type GeoJsonLayerProps = {
+	id: string; // Add key prop
+	geometry: Geometry;
+	color?: string;
+	opacity?: number;
 };
 
 /* Render GeoJSON Polygon Layer from file */
-const Parcels: React.FC<{ data: any }> = ({ data }) => {
+const GeoJsonLayer = (props: GeoJsonLayerProps) => {
+	const { id: key, geometry, color, opacity } = props;
 	return (
-		data && (
-			<Source id="geojson-source" type="geojson" data={data}>
+		geometry && (
+			<Source id={key} type="geojson" data={geometry}>
 				<Layer
-					id="geojson-layer"
+					id={key}
 					type="fill"
 					paint={{
-						'fill-color': '#ff0000',
-						'fill-opacity': 0.2,
+						'fill-color': `${color ?? '#ff0000'}`,
+						'fill-opacity': opacity ?? 1,
 					}}
 				/>
 			</Source>
 		)
 	);
+};
+
+// Generate GeoJSON circles for all nodes
+const generateCircleGeoJSON = (nodes: Node[]): Geometry => {
+	if (nodes.length === 0) {
+		return {
+			type: 'FeatureCollection',
+			features: [],
+		};
+	}
+
+	const featureCollection: Geometry = {
+		type: 'FeatureCollection' as const,
+		features: nodes.map((node) =>
+			turfCircle([node.longitude, node.latitude], node.radius / 1000, {
+				steps: 64,
+			})
+		),
+	};
+	if (featureCollection.features.length <= 1) return featureCollection;
+
+	return {
+		type: 'FeatureCollection',
+		features: [turfUnion(featureCollection)],
+	} as Geometry;
 };
 
 type NodeEditorProps = {
@@ -245,12 +238,16 @@ const OutputMetrics: React.FC<{ nodes: Node[] }> = ({ nodes }) => {
 	);
 };
 
+interface Geometry
+	extends FeatureCollection<Polygon | MultiPolygon, GeoJsonProperties> {}
+
 export const Map: React.FC = () => {
 	const [nodes, setNodes] = useState<Node[]>([]);
 	const [isAddingNodes, setIsAddingNodes] = useState<boolean>(false);
 	const [isRemovingNodes, setIsRemovingNodes] = useState<boolean>(false);
 	const [radius, setRadius] = useState<number>(1600);
-	const [geoJsonData, setGeoJsonData] = useState<any>(null);
+	const [parcelData, setParcelData] = useState<Geometry>({} as Geometry);
+	const [nodeBuffers, setNodeBuffers] = useState<Geometry>({} as Geometry);
 
 	useEffect(() => {
 		// Fetch GeoJSON from the public/data folder
@@ -261,11 +258,15 @@ export const Map: React.FC = () => {
 				}
 				return response.json();
 			})
-			.then((data) => {
-				setGeoJsonData(data);
+			.then((data: Geometry) => {
+				setParcelData(data);
 			})
 			.catch((error) => console.error('Error loading GeoJSON:', error));
 	}, []);
+
+	useEffect(() => {
+		setNodeBuffers(generateCircleGeoJSON(nodes));
+	}, [nodes]);
 
 	const addNode = (event: MapMouseEvent) => {
 		if (!isAddingNodes) return;
@@ -326,6 +327,23 @@ export const Map: React.FC = () => {
 		);
 	};
 
+	// New function to extract parcel features inside the merged circle
+	const extractParcelsInsideCircle = (
+		parcels: Geometry,
+		mergedCircle: Feature<Polygon | MultiPolygon, GeoJsonProperties>
+	): Geometry => {
+		return {
+			type: 'FeatureCollection' as const,
+			features: parcels.features.filter(
+				(feature: Feature<Polygon | MultiPolygon, GeoJsonProperties>) =>
+					booleanPointInPolygon(
+						centroid(feature.geometry),
+						mergedCircle.geometry
+					)
+			),
+		};
+	};
+
 	return (
 		<>
 			<InteractiveMap
@@ -354,8 +372,32 @@ export const Map: React.FC = () => {
 					/>
 				))}
 
-				<NodeBuffers nodes={nodes} />
-				<Parcels data={geoJsonData} />
+				<GeoJsonLayer
+					id="buffers"
+					geometry={nodeBuffers}
+					color="cyan"
+					opacity={0.5}
+				/>
+				<GeoJsonLayer
+					id="parcels"
+					geometry={parcelData}
+					color="gray"
+					opacity={0.1}
+				/>
+				{parcelData?.features &&
+					nodeBuffers?.features &&
+					nodeBuffers.features.map((buffer, i) => (
+						<GeoJsonLayer
+							key={i}
+							id={`selected-${i}`}
+							geometry={extractParcelsInsideCircle(
+								parcelData,
+								buffer
+							)}
+							color="white"
+							opacity={0.2}
+						/>
+					))}
 			</InteractiveMap>
 
 			{/* Control UI */}
