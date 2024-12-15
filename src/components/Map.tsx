@@ -171,6 +171,80 @@ const Parcels: React.FC<{ data: any }> = ({ data }) => {
 	);
 };
 
+type NodeEditorProps = {
+	isAddingNodes: boolean;
+	isRemovingNodes: boolean;
+	addNode: () => void;
+	removeNode: () => void;
+};
+
+const NodeEditor = (props: NodeEditorProps) => {
+	const { isAddingNodes, isRemovingNodes, addNode, removeNode } = props;
+	return (
+		<div>
+			<Button
+				className={` ${
+					isAddingNodes ? `text-cyan-800` : `text-gray-200`
+				}`}
+				onClick={addNode}
+			>
+				Add Nodes
+			</Button>
+			<Button
+				className={` ${
+					isRemovingNodes ? `text-cyan-800` : `text-gray-200`
+				}`}
+				onClick={removeNode}
+			>
+				Remove Nodes
+			</Button>
+		</div>
+	);
+};
+
+type NodeIOProps = {
+	importNodes: (event: React.ChangeEvent<HTMLInputElement>) => void;
+	exportNodes: () => void;
+};
+
+const NodeIO = (props: NodeIOProps) => {
+	const { importNodes: handleNodesImport, exportNodes: handleNodesExport } =
+		props;
+
+	return (
+		<div>
+			<Button
+				onClick={() => document.getElementById('fileInput')?.click()}
+			>
+				Import Nodes
+			</Button>
+			<input
+				id="fileInput"
+				type="file"
+				accept=".json"
+				onChange={handleNodesImport}
+				className="hidden"
+			/>
+			<Button onClick={handleNodesExport}>Export Nodes</Button>
+		</div>
+	);
+};
+
+const OutputMetrics: React.FC<{ nodes: Node[] }> = ({ nodes }) => {
+	return (
+		<Box className="top-2 right-2 text-right" key={JSON.stringify(nodes)}>
+			<Metric
+				label={'Spatial Dispersion Index'}
+				value={calculateSpatialDispersionIndex(nodes)}
+			/>
+			<Metric
+				label={'Total Density'}
+				value={calculateTotalDensity(nodes)}
+			/>
+		</Box>
+	);
+};
+
 export const Map: React.FC = () => {
 	const [nodes, setNodes] = useState<Node[]>([]);
 	const [isAddingNodes, setIsAddingNodes] = useState<boolean>(false);
@@ -286,37 +360,16 @@ export const Map: React.FC = () => {
 
 			{/* Control UI */}
 			<Box className="top-2 left-2">
-				<Button
-					className={` ${
-						isAddingNodes ? `text-cyan-800` : `text-gray-200`
-					}`}
-					onClick={handleAddNode}
-				>
-					Add Nodes
-				</Button>
-				<Button
-					className={` ${
-						isRemovingNodes ? `text-cyan-800` : `text-gray-200`
-					}`}
-					onClick={handleRemoveNode}
-				>
-					Remove Nodes
-				</Button>
-				<Button
-					onClick={() =>
-						document.getElementById('fileInput')?.click()
-					}
-				>
-					Import Nodes
-				</Button>
-				<input
-					id="fileInput"
-					type="file"
-					accept=".json"
-					onChange={handleNodesImport}
-					className="hidden"
+				<NodeEditor
+					isAddingNodes={isAddingNodes}
+					isRemovingNodes={isRemovingNodes}
+					addNode={handleAddNode}
+					removeNode={handleRemoveNode}
 				/>
-				<Button onClick={handleNodesExport}>Export Nodes</Button>
+				<NodeIO
+					importNodes={handleNodesImport}
+					exportNodes={handleNodesExport}
+				/>
 				<Input
 					label="Radius"
 					value={radius}
@@ -326,19 +379,7 @@ export const Map: React.FC = () => {
 			</Box>
 
 			{/* Metrics UI */}
-			<Box
-				className="top-2 right-2 text-right"
-				key={JSON.stringify(nodes)}
-			>
-				<Metric
-					label={'Spatial Dispersion Index'}
-					value={calculateSpatialDispersionIndex(nodes)}
-				/>
-				<Metric
-					label={'Total Density'}
-					value={calculateTotalDensity(nodes)}
-				/>
-			</Box>
+			<OutputMetrics nodes={nodes} />
 		</>
 	);
 };
