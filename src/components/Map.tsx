@@ -33,7 +33,7 @@ const Box = (props: BoxProps) => {
 	const { children, className } = props;
 	return (
 		<div
-			className={`absolute z-10 flex-col flex text-left border-cyan-800 border-2 rounded-lg p-4 ${className}`}
+			className={`bg-gray-900 bg-opacity-75 absolute z-10 flex-col flex text-left border-cyan-800 border-2 rounded-lg p-4 ${className}`}
 		>
 			{children}
 		</div>
@@ -53,7 +53,7 @@ const Input = <T extends number | string>(props: InputProps<T>) => {
 		<div>
 			{label}
 			<input
-				className="mr-2 ml-2 pl-2 mt-2 rounded-md"
+				className="mr-2 ml-2 pl-2 mt-2 rounded-md w-20"
 				value={value}
 				onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
 					setValue(
@@ -118,7 +118,6 @@ export const Map: React.FC = () => {
 				return response.json();
 			})
 			.then((data) => {
-				console.log(data);
 				setGeoJsonData(data);
 			})
 			.catch((error) => console.error('Error loading GeoJSON:', error));
@@ -276,15 +275,7 @@ export const Map: React.FC = () => {
 							type="fill"
 							paint={{
 								'fill-color': '#ff0000',
-								'fill-opacity': 0.5,
-							}}
-						/>
-						<Layer
-							id="geojson-outline-layer"
-							type="line"
-							paint={{
-								'line-color': '#ff0000',
-								'line-width': 2,
+								'fill-opacity': 0.2,
 							}}
 						/>
 					</Source>
