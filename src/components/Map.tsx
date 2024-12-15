@@ -41,16 +41,19 @@ const Box = (props: BoxProps) => {
 };
 
 type InputProps<T> = {
+	label: string;
 	value: T;
 	setValue: (value: T) => void;
 	unit?: string;
 };
 
 const Input = <T extends number | string>(props: InputProps<T>) => {
-	const { value, setValue, unit } = props;
+	const { label, value, setValue, unit } = props;
 	return (
 		<div>
+			{label}
 			<input
+				className="mr-2 ml-2 pl-2 mt-2 rounded-md"
 				value={value}
 				onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
 					setValue(
@@ -153,7 +156,8 @@ export const Map: React.FC = () => {
 		exportNodesToJson(nodes);
 	};
 
-	const setNodeRadii = () => {
+	const setNodeRadii = (radius: number) => {
+		setRadius(radius);
 		setNodes((nodes: Node[]) =>
 			nodes.map((n: Node) => ({
 				...n,
@@ -245,7 +249,6 @@ export const Map: React.FC = () => {
 
 			{/* Control UI */}
 			<Box className="top-2 left-2">
-				<Input value={radius} setValue={setNodeRadii} unit="m" />
 				<Button
 					className={` ${
 						isAddingNodes ? `text-cyan-800` : `text-gray-200`
@@ -277,6 +280,12 @@ export const Map: React.FC = () => {
 					className="hidden"
 				/>
 				<Button onClick={handleNodesExport}>Export Nodes</Button>
+				<Input
+					label="Radius"
+					value={radius}
+					setValue={setNodeRadii}
+					unit="m"
+				/>
 			</Box>
 
 			{/* Metrics UI */}
