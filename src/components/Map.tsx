@@ -24,6 +24,80 @@ const newGuid = () => {
 	);
 };
 
+type BoxProps = {
+	children: React.ReactNode;
+	className?: string;
+};
+
+const Box = (props: BoxProps) => {
+	const { children, className } = props;
+	return (
+		<div
+			className={`absolute z-10 flex-col flex text-left border-cyan-800 border-2 rounded-lg p-4 ${className}`}
+		>
+			{children}
+		</div>
+	);
+};
+
+type InputProps<T> = {
+	value: T;
+	setValue: (value: T) => void;
+	unit?: string;
+};
+
+const Input = <T extends number | string>(props: InputProps<T>) => {
+	const { value, setValue, unit } = props;
+	return (
+		<div>
+			<input
+				value={value}
+				onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+					setValue(
+						typeof value === 'number'
+							? (Number(e.target.value) as T)
+							: (e.target.value as T)
+					)
+				}
+			/>
+			{unit && <span>{unit}</span>}
+		</div>
+	);
+};
+
+type ButtonProps = {
+	onClick: () => void;
+	children: React.ReactNode;
+	className?: string;
+};
+
+const Button = (props: ButtonProps) => {
+	const { onClick, children, className } = props;
+	return (
+		<button
+			onClick={onClick}
+			className={`text-left w-full hover:text-cyan-600 ${className}`}
+		>
+			{children}
+		</button>
+	);
+};
+
+type MetricProps = {
+	label: string;
+	value: number;
+};
+
+const Metric = (props: MetricProps) => {
+	const { label, value } = props;
+	return (
+		<div className="flex justify-between w-full">
+			<div className="mr-2 text-right w-full">{label}</div>
+			<b>{value}</b>
+		</div>
+	);
+};
+
 export const Map: React.FC = () => {
 	const [nodes, setNodes] = useState<Node[]>([]);
 	const [isAddingNodes, setIsAddingNodes] = useState<boolean>(false);
@@ -161,6 +235,7 @@ export const Map: React.FC = () => {
 
 			{/* Control UI */}
 			<Box className="top-2 left-2">
+				<Input<number> value={radius} setValue={setRadius} unit="m" />
 				<Button
 					className={` ${
 						isAddingNodes ? `text-cyan-800` : `text-gray-200`
@@ -209,54 +284,5 @@ export const Map: React.FC = () => {
 				/>
 			</Box>
 		</>
-	);
-};
-
-type MetricProps = {
-	label: string;
-	value: number;
-};
-
-const Metric = (props: MetricProps) => {
-	const { label, value } = props;
-	return (
-		<div className="flex justify-between w-full">
-			<div className="mr-2 text-right w-full">{label}</div>
-			<b>{value}</b>
-		</div>
-	);
-};
-
-type BoxProps = {
-	children: React.ReactNode;
-	className?: string;
-};
-
-const Box = (props: BoxProps) => {
-	const { children, className } = props;
-	return (
-		<div
-			className={`absolute z-10 flex-col flex text-left border-cyan-800 border-2 rounded-lg p-4 ${className}`}
-		>
-			{children}
-		</div>
-	);
-};
-
-type ButtonProps = {
-	onClick: () => void;
-	children: React.ReactNode;
-	className?: string;
-};
-
-const Button = (props: ButtonProps) => {
-	const { onClick, children, className } = props;
-	return (
-		<button
-			onClick={onClick}
-			className={`text-left w-full hover:text-cyan-600 ${className}`}
-		>
-			{children}
-		</button>
 	);
 };
