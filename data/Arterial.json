@@ -1,65 +1,65 @@
 [
-	{
-		"id": "0188466a-d59d-4bfc-8d7c-d74e4c54a9fc",
-		"longitude": -123.12139354686823,
-		"latitude": 49.27403607827287,
-		"density": 1,
-		"radius": 1600
-	},
-	{
-		"id": "539dfc45-84c2-4ebd-8682-5c35c680963f",
-		"longitude": -123.11478079012699,
-		"latitude": 49.26661155814418,
-		"density": 1,
-		"radius": 1600
-	},
-	{
-		"id": "bde1f556-ca64-4a3e-b2f7-549942c24c19",
-		"longitude": -123.11477624243639,
-		"latitude": 49.26320186923863,
-		"density": 1,
-		"radius": 1600
-	},
-	{
-		"id": "e48b9a6c-442c-40ec-b44f-4235c27892df",
-		"longitude": -123.12660364596042,
-		"latitude": 49.263391334479365,
-		"density": 1,
-		"radius": 1600
-	},
-	{
-		"id": "5238299d-d639-4b71-8b76-9d1a51ae9079",
-		"longitude": -123.18585205818542,
-		"latitude": 49.264349892322144,
-		"density": 1,
-		"radius": 1600
-	},
-	{
-		"id": "faeeb11f-9460-41be-b504-61af48868341",
-		"longitude": -123.18588832124416,
-		"latitude": 49.26345656128362,
-		"density": 1,
-		"radius": 1600
-	},
-	{
-		"id": "235f0222-a8d9-4b88-91fc-ea5063c483dd",
-		"longitude": -123.17783438818289,
-		"latitude": 49.26422052344125,
-		"density": 1,
-		"radius": 1600
-	},
-	{
-		"id": "5c6d96e5-ad77-41f4-85d7-f2a5fc7e14e4",
-		"longitude": -123.18533716927872,
-		"latitude": 49.2347592945022,
-		"density": 1,
-		"radius": 1600
-	},
-	{
-		"id": "a4b794c9-e4d4-48fb-ad91-8d007c84f9ef",
-		"longitude": -123.18518883930685,
-		"latitude": 49.2500542029625,
-		"density": 1,
-		"radius": 1600
-	}
+  {
+    "id": "0188466a-d59d-4bfc-8d7c-d74e4c54a9fc",
+    "longitude": -123.12139354686823,
+    "latitude": 49.27403607827287,
+    "density": 1,
+    "radius": 1600
+  },
+  {
+    "id": "539dfc45-84c2-4ebd-8682-5c35c680963f",
+    "longitude": -123.11478079012699,
+    "latitude": 49.26661155814418,
+    "density": 1,
+    "radius": 1600
+  },
+  {
+    "id": "bde1f556-ca64-4a3e-b2f7-549942c24c19",
+    "longitude": -123.11477624243639,
+    "latitude": 49.26320186923863,
+    "density": 1,
+    "radius": 1600
+  },
+  {
+    "id": "e48b9a6c-442c-40ec-b44f-4235c27892df",
+    "longitude": -123.12660364596042,
+    "latitude": 49.263391334479365,
+    "density": 1,
+    "radius": 1600
+  },
+  {
+    "id": "5238299d-d639-4b71-8b76-9d1a51ae9079",
+    "longitude": -123.18585205818542,
+    "latitude": 49.264349892322144,
+    "density": 1,
+    "radius": 1600
+  },
+  {
+    "id": "faeeb11f-9460-41be-b504-61af48868341",
+    "longitude": -123.18588832124416,
+    "latitude": 49.26345656128362,
+    "density": 1,
+    "radius": 1600
+  },
+  {
+    "id": "235f0222-a8d9-4b88-91fc-ea5063c483dd",
+    "longitude": -123.17783438818289,
+    "latitude": 49.26422052344125,
+    "density": 1,
+    "radius": 1600
+  },
+  {
+    "id": "5c6d96e5-ad77-41f4-85d7-f2a5fc7e14e4",
+    "longitude": -123.18533716927872,
+    "latitude": 49.2347592945022,
+    "density": 1,
+    "radius": 1600
+  },
+  {
+    "id": "a4b794c9-e4d4-48fb-ad91-8d007c84f9ef",
+    "longitude": -123.18518883930685,
+    "latitude": 49.2500542029625,
+    "density": 1,
+    "radius": 1600
+  }
 ]

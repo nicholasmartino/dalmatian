@@ -28,6 +28,7 @@ export const Map: React.FC = () => {
 	const [nodes, setNodes] = useState<Node[]>([]);
 	const [isAddingNodes, setIsAddingNodes] = useState<boolean>(false);
 	const [isRemovingNodes, setIsRemovingNodes] = useState<boolean>(false);
+	const [radius, setRadius] = useState<number>(1600);
 
 	const addNode = (event: MapMouseEvent) => {
 		if (!isAddingNodes) return;
@@ -35,7 +36,6 @@ export const Map: React.FC = () => {
 			id: newGuid(),
 			longitude: event.lngLat.lng,
 			latitude: event.lngLat.lat,
-			radius: 1600,
 			density: 1,
 		};
 		setNodes((prevNodes: Node[]) => [...prevNodes, newNode]);
@@ -88,7 +88,7 @@ export const Map: React.FC = () => {
 		}
 
 		const mergedFeatures = nodes.map((node) =>
-			turfCircle([node.longitude, node.latitude], node.radius / 1000, {
+			turfCircle([node.longitude, node.latitude], radius / 1000, {
 				steps: 64,
 			})
 		);
