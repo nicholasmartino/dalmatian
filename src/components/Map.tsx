@@ -8,80 +8,14 @@ import InteractiveMap, {
 	MarkerDragEvent,
 } from 'react-map-gl';
 import { Node } from '../types/Node';
+import { newGuid } from '../utils/GuidUtils';
 import { exportNodesToJson, importNodesFromJson } from '../utils/NodesIO';
 import { Box } from './Box';
-import { Button } from './Button';
 import { generateCircleGeoJSON, GeoJsonLayer, Geometry } from './GeoJSON';
 import { Input } from './Input';
 import { OutputMetrics } from './Metric';
-
-const newGuid = () => {
-	return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) =>
-		(
-			+c ^
-			(crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (+c / 4)))
-		).toString(16)
-	);
-};
-
-type NodeEditorProps = {
-	isAddingNodes: boolean;
-	isRemovingNodes: boolean;
-	addNode: () => void;
-	removeNode: () => void;
-};
-
-const NodeEditor = (props: NodeEditorProps) => {
-	const { isAddingNodes, isRemovingNodes, addNode, removeNode } = props;
-	return (
-		<div>
-			<Button
-				className={` ${
-					isAddingNodes ? `text-cyan-800` : `text-gray-200`
-				}`}
-				onClick={addNode}
-			>
-				Add Nodes
-			</Button>
-			<Button
-				className={` ${
-					isRemovingNodes ? `text-cyan-800` : `text-gray-200`
-				}`}
-				onClick={removeNode}
-			>
-				Remove Nodes
-			</Button>
-		</div>
-	);
-};
-
-type NodeIOProps = {
-	importNodes: (event: React.ChangeEvent<HTMLInputElement>) => void;
-	exportNodes: () => void;
-};
-
-const NodeIO = (props: NodeIOProps) => {
-	const { importNodes: handleNodesImport, exportNodes: handleNodesExport } =
-		props;
-
-	return (
-		<div>
-			<Button
-				onClick={() => document.getElementById('fileInput')?.click()}
-			>
-				Import Nodes
-			</Button>
-			<input
-				id="fileInput"
-				type="file"
-				accept=".json"
-				onChange={handleNodesImport}
-				className="hidden"
-			/>
-			<Button onClick={handleNodesExport}>Export Nodes</Button>
-		</div>
-	);
-};
+import { NodeEditor } from './NodeEditor';
+import { NodeIO } from './NodeIO';
 
 export const Map: React.FC = () => {
 	const [nodes, setNodes] = useState<Node[]>([]);
