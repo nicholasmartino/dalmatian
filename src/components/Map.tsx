@@ -1,5 +1,6 @@
 import { booleanPointInPolygon, centroid } from '@turf/turf';
 import { Feature, GeoJsonProperties, MultiPolygon, Polygon } from 'geojson';
+import KDBush from 'kdbush';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import React, { useEffect, useState } from 'react';
 import InteractiveMap, {
@@ -120,6 +121,68 @@ export const Map: React.FC = () => {
 		};
 	};
 
+	type Centroid = {
+		id: string;
+		coords: [number, number];
+	};
+
+	// New function to extract centroids from parcels
+	const extractCentroids = (parcels: Geometry): Centroid[] => {
+		return parcels.features.map(
+			(feature: Feature<Polygon | MultiPolygon, GeoJsonProperties>) => {
+				const centroidPoint = centroid(feature.geometry);
+				return {
+					id: feature.id || newGuid(), // Use feature ID or generate a new one
+					coords: [
+						centroidPoint.geometry.coordinates[0],
+						centroidPoint.geometry.coordinates[1],
+					],
+				} as Centroid;
+			}
+		);
+	};
+
+	// New function to find nearest centroids and construct a graph
+	const constructCentroidGraph = (centroids: Centroid[]) => {
+		const spatialIndex = new KDBush(centroids.length);
+		centroids.forEach((c) => spatialIndex.add(c.coords[0], c.coords[1]));
+		spatialIndex.finish();
+
+		const graph: Record<string, string[]> = {};
+
+		const tolerance = 0.1;
+
+		centroids.forEach((centroid) => {
+			const longitude = centroid.coords[0];
+			const latitude = centroid.coords[1];
+			const nearest = spatialIndex.range(
+				longitude - tolerance,
+				latitude - tolerance,
+				longitude + tolerance,
+				latitude + tolerance
+			);
+			const nearestIds = nearest.map((index) => centroids[index].id);
+			graph[centroid.id] = nearestIds;
+		});
+
+		return graph;
+	};
+
+	// New function to handle extraction and graph construction
+	const handleParcelsAndGraphConstruction = (
+		parcels: Geometry,
+		mergedCircle: Feature<Polygon | MultiPolygon, GeoJsonProperties>
+	) => {
+		const filteredParcels = extractParcelsInsideCircle(
+			parcels,
+			mergedCircle
+		);
+		const centroids = extractCentroids(filteredParcels);
+		const centroidGraph = constructCentroidGraph(centroids);
+		console.log('Centroid Graph:', centroidGraph); // Log the graph for debugging
+		return filteredParcels;
+	};
+
 	return (
 		<>
 			<InteractiveMap
@@ -166,7 +229,7 @@ export const Map: React.FC = () => {
 						<GeoJsonLayer
 							key={i}
 							id={`selected-${i}`}
-							geometry={extractParcelsInsideCircle(
+							geometry={handleParcelsAndGraphConstruction(
 								parcelData,
 								buffer
 							)}
