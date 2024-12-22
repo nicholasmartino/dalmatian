@@ -172,16 +172,35 @@ export const Map: React.FC = () => {
 		return graph;
 	};
 
+	const findIslands = (edges: Record<string, string[]>): string[][] => {
+		// Step 2: Find connected components using DFS
+		const visited = new Set<string>();
+		const components: string[][] = [];
+
+		const dfs = (node: string, component: string[]) => {
+			visited.add(node);
+			component.push(node);
+			for (const neighbor of edges[node]) {
+				if (!visited.has(neighbor)) dfs(neighbor, component);
+			}
+		};
+
+		for (const node in edges) {
+			if (visited.has(node)) continue;
+			const component: string[] = [];
+			dfs(node, component);
+			components.push(component);
+		}
+
+		return components;
+	};
+
 	// New function to handle extraction and graph construction
 	const handleParcelsAndGraphConstruction = (
 		parcels: Geometry,
-		mergedCircle: Feature<Polygon | MultiPolygon, GeoJsonProperties>
+		polygon: Feature<Polygon | MultiPolygon, GeoJsonProperties>
 	) => {
-		const filteredParcels = extractParcelsInsideCircle(
-			parcels,
-			mergedCircle
-		);
-
+		const filteredParcels = extractParcelsInsideCircle(parcels, polygon);
 		const centroids = extractCentroids(filteredParcels);
 		const centroidGraph = constructCentroidGraph(centroids);
 		console.log('Centroid Graph:', centroidGraph); // Log the graph for debugging
