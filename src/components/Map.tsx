@@ -4,13 +4,7 @@ import {
 	featureCollection,
 	union,
 } from '@turf/turf';
-import {
-	Feature,
-	FeatureCollection,
-	GeoJsonProperties,
-	MultiPolygon,
-	Polygon,
-} from 'geojson';
+import { Feature, GeoJsonProperties, MultiPolygon, Polygon } from 'geojson';
 import { around } from 'geokdbush';
 import KDBush from 'kdbush';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -340,31 +334,29 @@ export const ProcessedParcel = (props: ProcessedBufferProps) => {
 		return featureCollection(mergedGeometries);
 	};
 
-	// New function to handle extraction and graph construction
-	const handleParcelsAndGraphConstruction = (
-		parcels: Geometry,
-		polygon: Feature<Polygon | MultiPolygon, GeoJsonProperties>
-	): FeatureCollection<Polygon | MultiPolygon, GeoJsonProperties> => {
-		const filteredParcels = extractParcelsInsideCircle(parcels, polygon);
-		const centroids = extractCentroids(filteredParcels);
-		const centroidGraph = constructCentroidGraph(centroids);
-		const islands = findIslands(centroidGraph);
-
-		const merged = mergeIslands(
-			filteredParcels,
-			islands.filter((i) => i.length > 1)
-		);
-
-		return merged;
-	};
+	const filteredParcels = extractParcelsInsideCircle(parcelData, buffer);
+	const centroids = extractCentroids(filteredParcels);
+	const centroidGraph = constructCentroidGraph(centroids);
+	const islands = findIslands(centroidGraph);
+	const merged = mergeIslands(
+		filteredParcels,
+		islands.filter((i) => i.length > 1)
+	);
 
 	return (
 		<>
 			<GeoJsonLayer
-				key={index}
+				key={`selected-${index}`}
 				id={`selected-${index}`}
-				geometry={handleParcelsAndGraphConstruction(parcelData, buffer)}
+				geometry={filteredParcels}
 				color="white"
+				opacity={0.2}
+			/>
+			<GeoJsonLayer
+				key={`merged-${index}`}
+				id={`merged-${index}`}
+				geometry={merged}
+				color="red"
 				opacity={0.2}
 			/>
 		</>
