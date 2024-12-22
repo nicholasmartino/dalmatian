@@ -102,6 +102,8 @@ export const Map: React.FC = () => {
 		);
 	};
 
+	console.log('> clusters.features.length', clusters.features.length);
+
 	return (
 		<>
 			<InteractiveMap
@@ -146,6 +148,7 @@ export const Map: React.FC = () => {
 					clusters?.features &&
 					clusters.features.map((buffer, i) => (
 						<Cluster
+							key={buffer.id}
 							index={i}
 							geometry={parcels}
 							boundary={buffer}

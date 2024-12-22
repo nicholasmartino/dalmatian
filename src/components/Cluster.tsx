@@ -175,7 +175,7 @@ export const Cluster = (props: ClusterProps) => {
 	);
 	console.timeEnd('Merge Islands');
 
-	console.time(`Buffer ${index}`);
+	console.timeEnd(`Buffer ${index}`);
 
 	return (
 		<>
