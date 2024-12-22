@@ -1,5 +1,6 @@
 import { booleanPointInPolygon, centroid } from '@turf/turf';
 import { Feature, GeoJsonProperties, MultiPolygon, Polygon } from 'geojson';
+import { around } from 'geokdbush';
 import KDBush from 'kdbush';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import React, { useEffect, useState } from 'react';
@@ -148,23 +149,26 @@ export const Map: React.FC = () => {
 		centroids.forEach((c) => spatialIndex.add(c.coords[0], c.coords[1]));
 		spatialIndex.finish();
 
-		const graph: Record<string, string[]> = {};
+		const graph: Record<string, string> = {};
+		const nearestIdsMap: Record<string, number[]> = {}; // Store nearest IDs for all centroids
 
-		const tolerance = 0.1;
-
+		// Batch find nearest centroids
 		centroids.forEach((centroid) => {
 			const longitude = centroid.coords[0];
 			const latitude = centroid.coords[1];
-			const nearest = spatialIndex.range(
-				longitude - tolerance,
-				latitude - tolerance,
-				longitude + tolerance,
-				latitude + tolerance
+			nearestIdsMap[centroid.id] = around<number>(
+				spatialIndex,
+				longitude,
+				latitude,
+				2,
+				1
 			);
-			const nearestIds = nearest.map((index) => centroids[index].id);
-			graph[centroid.id] = nearestIds;
 		});
 
+		// Map nearest IDs to graph
+		centroids.forEach((centroid) => {
+			graph[centroid.id] = centroids[nearestIdsMap[centroid.id][0]].id;
+		});
 		return graph;
 	};
 
@@ -177,6 +181,7 @@ export const Map: React.FC = () => {
 			parcels,
 			mergedCircle
 		);
+
 		const centroids = extractCentroids(filteredParcels);
 		const centroidGraph = constructCentroidGraph(centroids);
 		console.log('Centroid Graph:', centroidGraph); // Log the graph for debugging
