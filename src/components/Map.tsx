@@ -1,12 +1,3 @@
-import {
-	booleanPointInPolygon,
-	centroid,
-	featureCollection,
-	union,
-} from '@turf/turf';
-import { Feature, GeoJsonProperties, MultiPolygon, Polygon } from 'geojson';
-import { around } from 'geokdbush';
-import KDBush from 'kdbush';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import React, { useEffect, useState } from 'react';
 import InteractiveMap, {
@@ -18,6 +9,7 @@ import { Node } from '../types/Node';
 import { newGuid } from '../utils/GuidUtils';
 import { exportNodesToJson, importNodesFromJson } from '../utils/NodesIO';
 import { Box } from './Box';
+import { Cluster } from './Cluster';
 import { generateCircleGeoJSON, GeoJsonLayer, Geometry } from './GeoJSON';
 import { Input } from './Input';
 import { OutputMetrics } from './Metric';
@@ -29,8 +21,8 @@ export const Map: React.FC = () => {
 	const [isAddingNodes, setIsAddingNodes] = useState<boolean>(false);
 	const [isRemovingNodes, setIsRemovingNodes] = useState<boolean>(false);
 	const [radius, setRadius] = useState<number>(1600);
-	const [parcelData, setParcelData] = useState<Geometry>({} as Geometry);
-	const [nodeBuffers, setNodeBuffers] = useState<Geometry>({} as Geometry);
+	const [parcels, setParcels] = useState<Geometry>({} as Geometry);
+	const [clusters, setClusters] = useState<Geometry>({} as Geometry);
 
 	useEffect(() => {
 		// Fetch GeoJSON from the public/data folder
@@ -42,13 +34,13 @@ export const Map: React.FC = () => {
 				return response.json();
 			})
 			.then((data: Geometry) => {
-				setParcelData(data);
+				setParcels(data);
 			})
 			.catch((error) => console.error('Error loading GeoJSON:', error));
 	}, []);
 
 	useEffect(() => {
-		setNodeBuffers(generateCircleGeoJSON(nodes));
+		setClusters(generateCircleGeoJSON(nodes));
 	}, [nodes]);
 
 	const addNode = (event: MapMouseEvent) => {
@@ -140,23 +132,23 @@ export const Map: React.FC = () => {
 
 				<GeoJsonLayer
 					id="buffers"
-					geometry={nodeBuffers}
+					geometry={clusters}
 					color="cyan"
 					opacity={0.5}
 				/>
 				<GeoJsonLayer
 					id="parcels"
-					geometry={parcelData}
+					geometry={parcels}
 					color="gray"
 					opacity={0.1}
 				/>
-				{parcelData?.features &&
-					nodeBuffers?.features &&
-					nodeBuffers.features.map((buffer, i) => (
-						<ProcessedParcel
+				{parcels?.features &&
+					clusters?.features &&
+					clusters.features.map((buffer, i) => (
+						<Cluster
 							index={i}
-							parcelData={parcelData}
-							buffer={buffer}
+							geometry={parcels}
+							boundary={buffer}
 						/>
 					))}
 			</InteractiveMap>
@@ -183,182 +175,6 @@ export const Map: React.FC = () => {
 
 			{/* Metrics UI */}
 			<OutputMetrics nodes={nodes} />
-		</>
-	);
-};
-
-type ProcessedBufferProps = {
-	index: number;
-	parcelData: Geometry;
-	buffer: Feature<Polygon | MultiPolygon, GeoJsonProperties>;
-};
-
-export const ProcessedParcel = (props: ProcessedBufferProps) => {
-	const { index, parcelData, buffer } = props;
-
-	// New function to extract parcel features inside the merged circle
-	const extractParcelsInsideCircle = (
-		parcels: Geometry,
-		mergedCircle: Feature<Polygon | MultiPolygon, GeoJsonProperties>
-	): Geometry => {
-		return {
-			type: 'FeatureCollection' as const,
-			features: parcels.features.filter(
-				(feature: Feature<Polygon | MultiPolygon, GeoJsonProperties>) =>
-					booleanPointInPolygon(
-						centroid(feature.geometry),
-						mergedCircle.geometry
-					)
-			),
-		};
-	};
-
-	type Centroid = {
-		id: number;
-		coords: [number, number];
-	};
-
-	// New function to extract centroids from parcels
-	const extractCentroids = (parcels: Geometry): Centroid[] => {
-		return parcels.features.map(
-			(feature: Feature<Polygon | MultiPolygon, GeoJsonProperties>) => {
-				const centroidPoint = centroid(feature.geometry);
-				return {
-					id: feature.properties?.id, // Use feature ID or generate a new one
-					coords: [
-						centroidPoint.geometry.coordinates[0],
-						centroidPoint.geometry.coordinates[1],
-					],
-				} as Centroid;
-			}
-		);
-	};
-
-	type Link = {
-		from: number;
-		to: number[];
-	};
-
-	// New function to find nearest centroids and construct a graph
-	const constructCentroidGraph = (centroids: Centroid[]): Link[] => {
-		const spatialIndex = new KDBush(centroids.length);
-		centroids.forEach((c) => spatialIndex.add(c.coords[0], c.coords[1]));
-		spatialIndex.finish();
-
-		const nearestIdsMap: Record<string, number[]> = {}; // Store nearest IDs for all centroids
-
-		// Batch find nearest centroids
-		centroids.forEach((centroid) => {
-			const longitude = centroid.coords[0];
-			const latitude = centroid.coords[1];
-			nearestIdsMap[centroid.id] = around<number>(
-				spatialIndex,
-				longitude,
-				latitude,
-				2,
-				10
-			);
-		});
-
-		// Map nearest IDs to graph
-		const graph: Link[] = centroids.map((centroid) => {
-			return {
-				from: centroid.id,
-				to: nearestIdsMap[centroid.id].map((i) => centroids[i].id),
-			};
-		});
-		return graph;
-	};
-
-	const findIslands = (links: Link[]): number[][] => {
-		const visited = new Set<number>();
-		const islands: number[][] = [];
-
-		// Helper function to traverse the graph and collect connected nodes
-		const explore = (node: number, links: Link[], island: number[]) => {
-			if (visited.has(node)) return;
-			visited.add(node);
-			island.push(node);
-
-			const neighbors =
-				links.find((link) => link.from === node)?.to || [];
-			neighbors.forEach((neighbor) => {
-				if (!visited.has(neighbor)) {
-					explore(neighbor, links, island);
-				}
-			});
-		};
-
-		// Iterate through all nodes in the links array
-		links.forEach(({ from }) => {
-			if (!visited.has(from)) {
-				const island: number[] = [];
-				explore(from, links, island);
-				islands.push(island);
-			}
-		});
-
-		// Find nodes in `to` arrays that are not in `from`
-		links
-			.flatMap((link) => link.to)
-			.forEach((node) => {
-				if (!visited.has(node)) {
-					const island: number[] = [];
-					explore(node, links, island);
-					islands.push(island);
-				}
-			});
-
-		return islands;
-	};
-
-	const mergeIslands = (geometries: Geometry, islands: number[][]) => {
-		// Merge geometries for each island into a single MultiPolygon
-		const mergedGeometries: Feature<MultiPolygon>[] = islands.map(
-			(island) => {
-				// Filter geometries to only include those in current island
-				const islandGeometries = geometries.features.filter((feature) =>
-					island.includes(feature.properties?.id)
-				);
-
-				// Combine all polygons in the island into a single MultiPolygon
-				const combinedPolygons = union(
-					featureCollection(islandGeometries)
-				);
-
-				return combinedPolygons as Feature<MultiPolygon>;
-			}
-		);
-
-		// Return a FeatureCollection of the merged islands
-		return featureCollection(mergedGeometries);
-	};
-
-	const filteredParcels = extractParcelsInsideCircle(parcelData, buffer);
-	const centroids = extractCentroids(filteredParcels);
-	const centroidGraph = constructCentroidGraph(centroids);
-	const islands = findIslands(centroidGraph);
-	const merged = mergeIslands(
-		filteredParcels,
-		islands.filter((i) => i.length > 1)
-	);
-
-	return (
-		<>
-			<GeoJsonLayer
-				key={`selected-${index}`}
-				id={`selected-${index}`}
-				geometry={filteredParcels}
-				color="white"
-				opacity={0.2}
-			/>
-			<GeoJsonLayer
-				key={`merged-${index}`}
-				id={`merged-${index}`}
-				geometry={merged}
-				color="red"
-				opacity={0.2}
-			/>
 		</>
 	);
 };
