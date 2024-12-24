@@ -4,7 +4,13 @@ import {
 	featureCollection,
 	union,
 } from '@turf/turf';
-import { Feature, GeoJsonProperties, MultiPolygon, Polygon } from 'geojson';
+import {
+	Feature,
+	FeatureCollection,
+	GeoJsonProperties,
+	MultiPolygon,
+	Polygon,
+} from 'geojson';
 import { around } from 'geokdbush';
 import KDBush from 'kdbush';
 import { GeoJsonLayer, Geometry } from './GeoJSON';
@@ -134,16 +140,26 @@ export const Cluster = (props: ClusterProps) => {
 		return islands;
 	};
 
-	const mergeIslands = (geometries: Geometry, islands: number[][]) => {
-		// Merge geometries for each island into a single MultiPolygon
+	const mergeIslands = (
+		geometries: Geometry,
+		islands: number[][]
+	): FeatureCollection<MultiPolygon, GeoJsonProperties> => {
+		const idToFeatureMap = new Map<number, Feature<Polygon | MultiPolygon>>(
+			geometries.features.map((feature) => [
+				feature.properties?.id,
+				feature as Feature<Polygon | MultiPolygon>,
+			])
+		);
+
 		const mergedGeometries: Feature<MultiPolygon>[] = islands.map(
 			(island) => {
-				// Filter geometries to only include those in current island
-				const islandGeometries = geometries.features.filter((feature) =>
-					island.includes(feature.properties?.id)
-				);
+				const islandGeometries = island
+					.map((id) => idToFeatureMap.get(id))
+					.filter(
+						(feature): feature is Feature<Polygon | MultiPolygon> =>
+							Boolean(feature)
+					);
 
-				// Combine all polygons in the island into a single MultiPolygon
 				const combinedPolygons = union(
 					featureCollection(islandGeometries)
 				);
@@ -152,7 +168,6 @@ export const Cluster = (props: ClusterProps) => {
 			}
 		);
 
-		// Return a FeatureCollection of the merged islands
 		return featureCollection(mergedGeometries);
 	};
 
