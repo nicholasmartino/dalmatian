@@ -46,7 +46,7 @@ export const Cluster = (props: ClusterProps) => {
 		coords: [number, number];
 	};
 
-	// New function to extract centroids from parcels
+	// Extract centroids from parcels
 	const extractCentroids = (parcels: Geometry): Centroid[] => {
 		return parcels.features.map(
 			(feature: Feature<Polygon | MultiPolygon, GeoJsonProperties>) => {
@@ -67,75 +67,72 @@ export const Cluster = (props: ClusterProps) => {
 		to: number[];
 	};
 
-	// New function to find nearest centroids and construct a graph
-	const constructCentroidGraph = (centroids: Centroid[]): Link[] => {
+	// Find nearest centroids and construct a graph
+	const constructCentroidGraph = (
+		centroids: Centroid[],
+		minNeighbors: number = 2,
+		maxRadius: number = 10
+	): Link[] => {
 		const spatialIndex = new KDBush(centroids.length);
 		centroids.forEach((c) => spatialIndex.add(c.coords[0], c.coords[1]));
 		spatialIndex.finish();
 
-		const nearestIdsMap: Record<string, number[]> = {}; // Store nearest IDs for all centroids
-
-		// Batch find nearest centroids
-		centroids.forEach((centroid) => {
-			const longitude = centroid.coords[0];
-			const latitude = centroid.coords[1];
-			nearestIdsMap[centroid.id] = around<number>(
+		return centroids.map((centroid) => {
+			const nearestIds = around<number>(
 				spatialIndex,
-				longitude,
-				latitude,
-				2,
-				10
+				centroid.coords[0],
+				centroid.coords[1],
+				minNeighbors,
+				maxRadius
 			);
-		});
-
-		// Map nearest IDs to graph
-		const graph: Link[] = centroids.map((centroid) => {
 			return {
 				from: centroid.id,
-				to: nearestIdsMap[centroid.id].map((i) => centroids[i].id),
+				to: nearestIds.map((i) => centroids[i].id),
 			};
 		});
-		return graph;
 	};
 
 	const findIslands = (links: Link[]): number[][] => {
+		// Step 1: Build the adjacency list
+		const adjacencyList = new Map<number, Set<number>>();
+
+		links.forEach(({ from, to }) => {
+			if (!adjacencyList.has(from)) {
+				adjacencyList.set(from, new Set());
+			}
+			to.forEach((neighbor) => {
+				adjacencyList.get(from)?.add(neighbor);
+				if (!adjacencyList.has(neighbor)) {
+					adjacencyList.set(neighbor, new Set());
+				}
+				adjacencyList.get(neighbor)?.add(from); // Ensure bidirectional edges
+			});
+		});
+
+		// Step 2: Traverse the graph using DFS
 		const visited = new Set<number>();
 		const islands: number[][] = [];
 
-		// Helper function to traverse the graph and collect connected nodes
-		const explore = (node: number, links: Link[], island: number[]) => {
+		const explore = (node: number, island: number[]) => {
 			if (visited.has(node)) return;
 			visited.add(node);
 			island.push(node);
 
-			const neighbors =
-				links.find((link) => link.from === node)?.to || [];
-			neighbors.forEach((neighbor) => {
+			(adjacencyList.get(node) || []).forEach((neighbor) => {
 				if (!visited.has(neighbor)) {
-					explore(neighbor, links, island);
+					explore(neighbor, island);
 				}
 			});
 		};
 
-		// Iterate through all nodes in the links array
-		links.forEach(({ from }) => {
-			if (!visited.has(from)) {
+		// Step 3: Discover all islands
+		adjacencyList.forEach((_neighbors, node) => {
+			if (!visited.has(node)) {
 				const island: number[] = [];
-				explore(from, links, island);
+				explore(node, island);
 				islands.push(island);
 			}
 		});
-
-		// Find nodes in `to` arrays that are not in `from`
-		links
-			.flatMap((link) => link.to)
-			.forEach((node) => {
-				if (!visited.has(node)) {
-					const island: number[] = [];
-					explore(node, links, island);
-					islands.push(island);
-				}
-			});
 
 		return islands;
 	};
@@ -173,11 +170,17 @@ export const Cluster = (props: ClusterProps) => {
 
 	console.time('Buffer');
 
-	console.time('Graph');
+	console.time('Extract Parcels');
 	const filteredParcels = extractParcelsInsideCircle(geometry, boundary);
+	console.timeEnd('Extract Parcels');
+
+	console.time('Extract Centroids');
 	const centroids = extractCentroids(filteredParcels);
+	console.timeEnd('Extract Centroids');
+
+	console.time('Construct Graph');
 	const centroidGraph = constructCentroidGraph(centroids);
-	console.timeEnd('Graph');
+	console.timeEnd('Construct Graph');
 
 	console.time('Find Islands');
 	const islands = findIslands(centroidGraph);
