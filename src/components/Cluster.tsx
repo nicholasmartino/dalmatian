@@ -209,7 +209,7 @@ export const Cluster = (props: ClusterProps) => {
 				key={`merged-${index}`}
 				id={`merged-${index}`}
 				geometry={merged}
-				color="red"
+				color="blue"
 				opacity={0.2}
 			/>
 		</>

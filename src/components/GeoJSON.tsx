@@ -13,20 +13,30 @@ export interface Geometry
 	extends FeatureCollection<Polygon | MultiPolygon, GeoJsonProperties> {}
 
 type GeoJsonLayerProps = {
-	id: string; // Add key prop
+	id: string;
 	geometry: Geometry;
 	color?: string;
 	opacity?: number;
+	strokeColor?: string;
+	strokeWidth?: number;
 };
 
 /* Render GeoJSON Polygon Layer from file */
 export const GeoJsonLayer = (props: GeoJsonLayerProps) => {
-	const { id: key, geometry, color, opacity } = props;
+	const { id, geometry, color, opacity, strokeColor, strokeWidth } = props;
 	return (
 		geometry && (
-			<Source id={key} type="geojson" data={geometry}>
+			<Source id={id} type="geojson" data={geometry}>
 				<Layer
-					id={key}
+					id={`${id}-outline`}
+					type="line"
+					paint={{
+						'line-color': `${strokeColor ?? '#ff0000'}`,
+						'line-width': strokeWidth ?? (strokeColor ? 1 : 0),
+					}}
+				/>
+				<Layer
+					id={`${id}-fill`}
 					type="fill"
 					paint={{
 						'fill-color': `${color ?? '#ff0000'}`,

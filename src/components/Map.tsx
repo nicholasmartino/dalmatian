@@ -129,8 +129,9 @@ export const Map: React.FC = () => {
 				<GeoJsonLayer
 					id="buffers"
 					geometry={clusters}
-					color="cyan"
-					opacity={0.5}
+					opacity={0}
+					strokeColor="cyan"
+					strokeWidth={2}
 				/>
 				<GeoJsonLayer
 					id="parcels"
