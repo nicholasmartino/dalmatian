@@ -156,7 +156,7 @@ export const Cluster = (props: ClusterProps) => {
 		return featureCollection(mergedGeometries);
 	};
 
-	console.time(`Buffer ${index}`);
+	console.time('Buffer');
 
 	console.time('Graph');
 	const filteredParcels = extractParcelsInsideCircle(geometry, boundary);
@@ -175,7 +175,8 @@ export const Cluster = (props: ClusterProps) => {
 	);
 	console.timeEnd('Merge Islands');
 
-	console.timeEnd(`Buffer ${index}`);
+	console.timeEnd('Buffer');
+	console.log('---');
 
 	return (
 		<>

@@ -1,5 +1,5 @@
 import 'mapbox-gl/dist/mapbox-gl.css';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import InteractiveMap, {
 	MapMouseEvent,
 	Marker,
@@ -22,7 +22,7 @@ export const Map: React.FC = () => {
 	const [isRemovingNodes, setIsRemovingNodes] = useState<boolean>(false);
 	const [radius, setRadius] = useState<number>(1600);
 	const [parcels, setParcels] = useState<Geometry>({} as Geometry);
-	const [clusters, setClusters] = useState<Geometry>({} as Geometry);
+	const clusters = useMemo(() => generateCircleGeoJSON(nodes), [nodes]);
 
 	useEffect(() => {
 		// Fetch GeoJSON from the public/data folder
@@ -38,10 +38,6 @@ export const Map: React.FC = () => {
 			})
 			.catch((error) => console.error('Error loading GeoJSON:', error));
 	}, []);
-
-	useEffect(() => {
-		setClusters(generateCircleGeoJSON(nodes));
-	}, [nodes]);
 
 	const addNode = (event: MapMouseEvent) => {
 		if (!isAddingNodes) return;
@@ -101,8 +97,6 @@ export const Map: React.FC = () => {
 			}))
 		);
 	};
-
-	console.log('> clusters.features.length', clusters.features.length);
 
 	return (
 		<>
