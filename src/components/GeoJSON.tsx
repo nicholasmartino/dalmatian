@@ -5,7 +5,7 @@ import {
 	MultiPolygon,
 	Polygon,
 } from 'geojson';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import { DataDrivenPropertyValueSpecification } from 'mapbox-gl';
 import { Layer, Source } from 'react-map-gl';
 import { Node } from '../types/Node';
 
@@ -15,7 +15,7 @@ export interface Geometry
 type GeoJsonLayerProps = {
 	id: string;
 	geometry: Geometry;
-	color?: string;
+	color?: string | DataDrivenPropertyValueSpecification<string>;
 	opacity?: number;
 	strokeColor?: string;
 	strokeWidth?: number;
@@ -31,7 +31,7 @@ export const GeoJsonLayer = (props: GeoJsonLayerProps) => {
 					id={`${id}-outline`}
 					type="line"
 					paint={{
-						'line-color': `${strokeColor ?? '#ff0000'}`,
+						'line-color': strokeColor ?? '#ff0000',
 						'line-width': strokeWidth ?? (strokeColor ? 1 : 0),
 					}}
 				/>
@@ -39,7 +39,7 @@ export const GeoJsonLayer = (props: GeoJsonLayerProps) => {
 					id={`${id}-fill`}
 					type="fill"
 					paint={{
-						'fill-color': `${color ?? '#ff0000'}`,
+						'fill-color': color ?? '#ff0000',
 						'fill-opacity': opacity ?? 1,
 					}}
 				/>
