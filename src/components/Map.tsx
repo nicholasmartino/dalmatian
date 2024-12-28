@@ -26,7 +26,7 @@ export const Map: React.FC = () => {
 
 	useEffect(() => {
 		// Fetch GeoJSON from the public/data folder
-		fetch('./data/Parcel.geojson')
+		fetch('./data/ParcelFSR.geojson')
 			.then((response) => {
 				if (!response.ok) {
 					throw new Error('Network response was not ok');
