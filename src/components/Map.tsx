@@ -9,6 +9,7 @@ import { Node } from '../types/Node';
 import { newGuid } from '../utils/GuidUtils';
 import { exportNodesToJson, importNodesFromJson } from '../utils/NodesIO';
 import { Box } from './Box';
+import { BuildingFootprintGenerator } from './BuildingFootprintGenerator';
 import { Cluster } from './Cluster';
 import { generateCircleGeoJSON, GeoJsonLayer, Geometry } from './GeoJSON';
 import { Input } from './Input';
@@ -22,6 +23,9 @@ export const Map: React.FC = () => {
 	const [isRemovingNodes, setIsRemovingNodes] = useState<boolean>(false);
 	const [radius, setRadius] = useState<number>(1600);
 	const [parcels, setParcels] = useState<Geometry>({} as Geometry);
+	const [footprints, setFootprints] =
+		useState<GeoJSON.FeatureCollection | null>(null);
+	const [showFootprints, setShowFootprints] = useState<boolean>(true);
 	const clusters = useMemo(() => generateCircleGeoJSON(nodes), [nodes]);
 
 	useEffect(() => {
@@ -59,7 +63,7 @@ export const Map: React.FC = () => {
 							...node,
 							longitude: event.lngLat.lng,
 							latitude: event.lngLat.lat,
-					  }
+						}
 					: node
 			)
 		);
@@ -152,6 +156,19 @@ export const Map: React.FC = () => {
 					}}
 					opacity={0.1}
 				/>
+
+				{/* Footprints layer */}
+				{footprints && showFootprints && (
+					<GeoJsonLayer
+						id="footprints"
+						geometry={footprints as any}
+						color="#00ffff"
+						opacity={0.7}
+						strokeColor="#00ffff"
+						strokeWidth={2}
+					/>
+				)}
+
 				{parcels?.features &&
 					clusters?.features &&
 					clusters.features.map((buffer, i) => (
@@ -182,6 +199,18 @@ export const Map: React.FC = () => {
 					setValue={setNodeRadii}
 					unit="m"
 				/>
+
+				{/* Footprint controls in a separate box for proper stacking */}
+				{parcels?.features && clusters?.features && (
+					<>
+						<br />
+						<BuildingFootprintGenerator
+							parcels={parcels}
+							clusters={clusters}
+							onFootprintsGenerated={setFootprints}
+						/>
+					</>
+				)}
 			</Box>
 
 			{/* Metrics UI */}

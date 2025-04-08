@@ -7,15 +7,18 @@
 		"dev": "vite",
 		"build": "tsc -b && vite build",
 		"lint": "eslint .",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,scss}\""
 	},
 	"dependencies": {
-		"@turf/turf": "^7.1.0",
+		"@tensorflow/tfjs": "^4.22.0",
+		"@turf/turf": "^7.2.0",
 		"@types/geokdbush": "^1.1.5",
 		"@types/react-map-gl": "^6.1.6",
 		"dotenv": "^16.4.5",
 		"geokdbush": "^2.0.1",
 		"i": "^0.3.7",
+		"mapbox-gl": "^3.10.0",
 		"npm": "^10.9.1",
 		"react-map-gl": "^7.1.7"
 	},
@@ -31,6 +34,7 @@
 		"eslint-plugin-react-refresh": "^0.4.14",
 		"globals": "^15.11.0",
 		"postcss": "^8.4.49",
+		"prettier": "^3.5.3",
 		"tailwindcss": "^3.4.15",
 		"typescript": "~5.6.2",
 		"typescript-eslint": "^8.11.0",
