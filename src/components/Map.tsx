@@ -208,6 +208,7 @@ export const Map: React.FC = () => {
 							parcels={parcels}
 							clusters={clusters}
 							onFootprintsGenerated={setFootprints}
+							modelPath="/data/model/model.json"
 						/>
 					</>
 				)}

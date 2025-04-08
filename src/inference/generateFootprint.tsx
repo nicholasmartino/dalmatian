@@ -1,28 +1,44 @@
 import * as tf from '@tensorflow/tfjs';
 
 export async function generateFootprint(
-	inputImage: HTMLImageElement
-): Promise<tf.Tensor> {
-	// Load the model
-	const model = await tf.loadLayersModel('/Users/nicholasmartino/Repositories/pugmark/data/model/model.json');
+	inputImage: HTMLImageElement,
+	imageSize: [number, number],
+	model: tf.LayersModel
+): Promise<tf.Tensor | null> {
+	try {
+		// Preprocess the image
+		const tensor = preprocessImage(inputImage, imageSize);
 
-	// Preprocess the image
-	const tensor = tf.browser
-		.fromPixels(inputImage)
-		.resizeBilinear([256, 256])
-		.toFloat()
-		.div(255.0)
-		.expandDims(0);
+		// Generate the footprint
+		const prediction = model.predict(tensor) as tf.Tensor;
 
-	// Generate the footprint
-	const output = model.predict(tensor)
+		// Clean up input tensor to avoid memory leaks
+		tensor.dispose();
 
-	// Postprocess (convert back to image format)
-	const outputImage = (output as tf.Tensor)
-		?.squeeze()
-		?.mul(255)
-		?.clipByValue(0, 255)
-		?.cast('int32');
+		// Postprocess the output
+		return postprocessOutput(prediction);
+	} catch (error) {
+		console.error('Error generating footprint:', error);
+		return null;
+	}
+}
 
-	return outputImage;
+function preprocessImage(
+	image: HTMLImageElement,
+	size: [number, number]
+): tf.Tensor {
+	return tf.tidy(() => {
+		return tf.browser
+			.fromPixels(image)
+			.resizeBilinear(size)
+			.toFloat()
+			.div(255.0)
+			.expandDims(0);
+	});
+}
+
+function postprocessOutput(output: tf.Tensor): tf.Tensor {
+	return tf.tidy(() => {
+		return output.squeeze().mul(255).clipByValue(0, 255).cast('int32');
+	});
 }
